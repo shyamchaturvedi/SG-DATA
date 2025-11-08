@@ -14,8 +14,9 @@ const hostname = '0.0.0.0'; // Allow connections from all network interfaces
 // Enable CORS and JSON middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-const excelFilePath = path.join(__dirname, 'public', 'MAIN BUSINESS UPDATE SHEET.xlsx');
+app.use(express.static(path.join(__dirname, 'PUBLIC')));
+
+const excelFilePath = path.join(__dirname, 'PUBLIC', 'MAIN BUSINESS UPDATE SHEET.xlsx');
 
 let cachedData = null;
 
@@ -84,7 +85,7 @@ app.get('/search', (req, res) => {
 
 // Route to serve the main HTML file
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'PUBLIC', 'index.html'));
 });
 
 app.listen(PORT, hostname, () => {
