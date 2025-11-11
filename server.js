@@ -52,11 +52,13 @@ app.get('/search', (req, res) => {
             return res.json({ error: 'No search value provided' });
         }
 
-        // Filter rows matching customer name or customer ID
+        // Filter rows matching customer name, customer ID, associate name, or associate ID
         const filtered = cachedData.filter(row => {
             const custName = String(row['CUSTOMER NAME'] || '').toLowerCase();
             const custID = String(row['CUSTOMER USER ID'] || '').toLowerCase();
-            return custName.includes(searchValue) || custID.includes(searchValue);
+            const associateName = String(row['ASSOCIATE NAME'] || '').toLowerCase();
+            const associateId = String(row['ASSOCIATE ID'] || '').toLowerCase();
+            return custName.includes(searchValue) || custID.includes(searchValue) || associateName.includes(searchValue) || associateId.includes(searchValue);
         });
 
         // Normalize column names to ensure consistency
