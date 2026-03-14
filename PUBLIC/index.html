@@ -1,36 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Data Search</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Data Search</title>
+
+<style>
+
+body{
+font-family:Arial, sans-serif;
+margin:0;
+padding:0;
+background:#f4f4f4;
+}
+
+.container{
+width:90%;
+max-width:1000px;
+margin:auto;
+margin-top:40px;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+.header{
+text-align:center;
+margin-bottom:20px;
+}
+
+.search-container{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
+
+.search-container input{
+flex:1;
+padding:10px;
+font-size:16px;
+}
+
+.search-container button{
+padding:10px 15px;
+cursor:pointer;
+}
+
+.table-container{
+overflow-x:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th, td{
+border:1px solid #ccc;
+padding:8px;
+text-align:left;
+}
+
+th{
+background:#eee;
+}
+
+/* SYSTEM LOCK SCREEN */
+
+#systemLock{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000000e6;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.lock-box{
+background:white;
+padding:40px;
+border-radius:10px;
+text-align:center;
+width:90%;
+max-width:400px;
+}
+
+.lock-box h1{
+color:red;
+margin-bottom:10px;
+}
+
+.lock-box p{
+font-size:16px;
+margin-bottom:15px;
+}
+
+.lock-box button{
+padding:10px 20px;
+border:none;
+background:#007bff;
+color:white;
+border-radius:5px;
+cursor:pointer;
+}
+
+</style>
+
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Customer Data Search</h1>
-        </div>
-        
-        <div class="customer-header" id="customerName" style="display: none;">
-            CUSTOMER NAME
-        </div>
 
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Enter Customer Name, ID, or Associate ID...">
-            <button id="searchButton">Search</button>
-            <button id="printButton" style="display: none;">Print Results</button>
-        </div>
+<!-- SYSTEM LOCK MESSAGE -->
 
-        <div class="table-container">
-            <table id="resultTable">
-                <thead id="tableHead">
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
+<div id="systemLock">
+<div class="lock-box">
 
-    <script src="script.js"></script>
+<h1>⚠ System Update Required</h1>
+
+<p>Your system access has been temporarily disabled.</p>
+
+<p>Please contact administrator to renew your system.</p>
+
+<button onclick="contactAdmin()">Contact Admin</button>
+
+</div>
+</div>
+
+
+<div class="container">
+<div class="header">
+<h1>Customer Data Search</h1>
+</div>
+
+<div class="customer-header" id="customerName" style="display:none;">
+CUSTOMER NAME
+</div>
+
+<div class="search-container">
+<input type="text" id="searchInput" placeholder="Enter Customer Name, ID, or Associate ID...">
+<button id="searchButton">Search</button>
+<button id="printButton" style="display:none;">Print Results</button>
+</div>
+
+<div class="table-container">
+<table id="resultTable">
+<thead id="tableHead"></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+
+
+<script>
+
+function contactAdmin(){
+alert("Please contact admin to renew your system access.");
+}
+
+</script>
+
 </body>
 </html>
