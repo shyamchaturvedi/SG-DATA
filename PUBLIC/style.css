@@ -24,6 +24,7 @@ body {
     background-image: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)), url('bg.png');
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
@@ -260,15 +261,19 @@ body {
 }
 
 .btn-primary {
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: white;
     border: none;
-    border-radius: 8px;
-    padding: 12px 28px;
-    font-weight: 600;
+    border-radius: 12px;
+    padding: 0 28px;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     white-space: nowrap;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-primary:hover {
@@ -280,10 +285,14 @@ body {
     background: rgba(16, 185, 129, 0.1);
     color: var(--secondary);
     border: 1px solid rgba(16, 185, 129, 0.2);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 12px;
+    padding: 0 16px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-secondary:hover:not(.hidden) {
@@ -299,71 +308,101 @@ body {
 .results-section {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
 }
 
 .customer-info {
     text-align: center;
+    background: rgba(56, 189, 248, 0.05);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 10px;
 }
 
 .customer-info h2 {
     font-family: 'Poppins', sans-serif;
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: var(--accent);
     letter-spacing: 2px;
+    margin: 0;
 }
 
 .table-wrapper {
     overflow-x: auto;
-    padding: 0; /* Table fills the glass card */
+    padding: 0;
+    border-radius: 16px;
+}
+
+/* Custom Webkit scrollbar for premium look */
+.table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    min-width: 1200px; /* Force minimum width to prevent squishing */
 }
 
 th {
     text-align: left;
-    padding: 18px 20px;
-    background: rgba(255, 255, 255, 0.03);
+    padding: 20px 16px;
+    background: rgba(0, 0, 0, 0.2);
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 1px;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
     border-bottom: 1px solid var(--border-color);
 }
 
 td {
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 18px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     color: var(--text-primary);
+    vertical-align: middle;
+}
+
+tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
 }
 
 tbody tr:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .table-customer-header th {
     background: rgba(56, 189, 248, 0.1);
     color: var(--accent);
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     text-align: center;
-    padding: 24px;
+    padding: 16px;
     font-family: 'Poppins', sans-serif;
+    letter-spacing: 2px;
 }
 
 .totals-row td {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
     font-weight: 700;
     color: white;
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .balance-box-row td {
-    background: rgba(16, 185, 129, 0.15) !important;
-    border-top: 2px solid var(--secondary);
+    background: rgba(16, 185, 129, 0.08) !important;
+    border-top: 1px solid rgba(16, 185, 129, 0.3);
     text-align: right;
     padding: 20px 40px;
 }
@@ -372,6 +411,7 @@ tbody tr:hover {
     font-size: 1.25rem;
     font-weight: 800;
     color: var(--secondary);
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
 .no-records {
