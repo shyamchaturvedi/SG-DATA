@@ -481,20 +481,92 @@ tbody tr:hover {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+    /* Transform Table into Cards for Android/Mobile */
+    #resultTable thead {
+        display: none;
+    }
+
+    #resultTable, #resultTable tbody, #resultTable tr, #resultTable td {
+        display: block;
+        width: 100%;
+    }
+
+    #resultTable tr {
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    #resultTable td {
+        text-align: right;
+        padding: 12px 16px;
+        position: relative;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        min-height: 48px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Add labels through CSS for common fields */
+    #resultTable td:not(.table-customer-header):not(.totals-row td):not(.balance-box-row td)::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        margin-right: 12px;
+    }
+
+    #resultTable td:last-child {
+        border-bottom: none;
+    }
+
+    /* Keep Headers for Total/Balance Special */
+    .table-customer-header th, .table-customer-header td {
+        display: block !important;
+        background: rgba(56, 189, 248, 0.15) !important;
+        font-size: 1.1rem !important;
+        text-align: center !important;
+        justify-content: center !important;
+    }
+
+    .totals-row td, .balance-box-row td {
+        justify-content: space-between !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .balance-text {
+        font-size: 1.1rem;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Better Search Bar for Android */
+    .search-input-wrapper {
+        gap: 8px;
+    }
+
+    #searchInput {
+        background: rgba(30, 41, 59, 1);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 10px;
+    }
+
+    .btn-primary {
+        padding: 16px;
+        font-size: 1rem;
+        border-radius: 12px;
+    }
+
     .login-card {
-        padding: 30px 20px;
-    }
-    
-    .logo-area h1 {
-        font-size: 1.25rem;
-    }
-    
-    .btn-ghost span {
-        display: none; /* Icon only for lock on tiny screens */
-    }
-    
-    .btn-ghost {
-        padding: 8px;
+        padding: 40px 24px;
+        border-radius: 24px;
+        max-width: 90%;
     }
 }

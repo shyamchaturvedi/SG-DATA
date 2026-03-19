@@ -174,17 +174,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const comm = Number(row['ASSOCIATE COMMISSION'] || 0);
 
             tr.innerHTML = `
-                <td>${row['SR NO'] || '-'}</td>
-                <td>${row['ASSOCIATE NAME'] || '-'}</td>
-                <td>${row['CUSTOMER NAME'] || '-'}</td>
-                <td>${row['CUSTOMER USER ID'] || '-'}</td>
-                <td>${row['TRANSACTION DATE'] || '-'}</td>
-                <td>${formatCurrency(amt)}</td>
-                <td>${row['TRANSACTION NUMBER'] || '-'}</td>
-                <td>${row['PAYMENT PLAN'] || '-'}</td>
-                <td>${formatCurrency(received)}</td>
-                <td>${formatCurrency(balance)}</td>
-                <td>${formatCurrency(comm)}</td>
+                <td data-label="SR NO">${row['SR NO'] || '-'}</td>
+                <td data-label="ASSOCIATE">${row['ASSOCIATE NAME'] || '-'}</td>
+                <td data-label="CUSTOMER">${row['CUSTOMER NAME'] || '-'}</td>
+                <td data-label="USER ID">${row['CUSTOMER USER ID'] || '-'}</td>
+                <td data-label="DATE">${row['TRANSACTION DATE'] || '-'}</td>
+                <td data-label="AMOUNT">${formatCurrency(amt)}</td>
+                <td data-label="TXN #">${row['TRANSACTION NUMBER'] || '-'}</td>
+                <td data-label="PLAN">${row['PAYMENT PLAN'] || '-'}</td>
+                <td data-label="RECEIVED">${formatCurrency(received)}</td>
+                <td data-label="BALANCE">${formatCurrency(balance)}</td>
+                <td data-label="COMMISSION">${formatCurrency(comm)}</td>
             `;
             tableBody.appendChild(tr);
 
