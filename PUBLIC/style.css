@@ -107,37 +107,44 @@ body {
 
 .input-group {
     display: flex;
-    gap: 12px;
+    flex-direction: column; /* Stacking for cleaner mobile look */
+    gap: 16px;
+    width: 100%;
 }
 
 #passcodeInput {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.05);
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08); /* Darker, more glass-like */
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 14px 18px;
+    padding: 16px 20px;
     color: white;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     letter-spacing: 4px;
     outline: none;
-    transition: border-color 0.3s ease;
+    text-align: center;
+    transition: all 0.3s ease;
 }
 
 #passcodeInput:focus {
     border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
 }
 
 #unlockButton {
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: white;
     border: none;
     border-radius: 12px;
-    padding: 0 24px;
+    padding: 16px;
     cursor: pointer;
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
-    font-weight: 600;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1rem;
     transition: all 0.3s ease;
 }
 
