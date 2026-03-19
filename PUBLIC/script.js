@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const tableBody = resultTable.querySelector('tbody');
     const noResults = document.getElementById('noResults');
 
-    // Config
-    const MASTER_PASSCODE = '12345'; // Change this as needed
+    // Config - REMOVED hardcoded passcode for security
+    // The passcode is now stored securely on the server in a .env file.
 
     // Initialize Icons
     if (typeof lucide !== 'undefined') {
@@ -33,26 +33,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleLogin() {
+    async function handleLogin() {
         const code = passcodeInput.value.trim();
-        if (code === MASTER_PASSCODE) {
-            loginFeedback.textContent = 'Access Granted!';
-            loginFeedback.className = 'feedback success';
-            sessionStorage.setItem('isUnlocked', 'true');
-            
-            // Success animation
-            passcodeOverlay.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-            passcodeOverlay.style.opacity = '0';
-            passcodeOverlay.style.transform = 'scale(1.1)';
-            
-            setTimeout(() => {
-                showApp();
-                passcodeOverlay.classList.add('hidden');
-                // Reset styling for next time
-                passcodeOverlay.style.opacity = '';
-                passcodeOverlay.style.transform = '';
-            }, 600);
-        } else {
+        if (!code) return;
+
+        // Visual feedback
+        unlockButton.disabled = true;
+        unlockButton.querySelector('span').textContent = 'Verifying...';
+
+        try {
+            const response = await fetch('/verify-passcode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ passcode: code })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                loginFeedback.textContent = 'Access Granted!';
+                loginFeedback.className = 'feedback success';
+                sessionStorage.setItem('isUnlocked', 'true');
+                
+                // Success animation
+                passcodeOverlay.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                passcodeOverlay.style.opacity = '0';
+                passcodeOverlay.style.transform = 'scale(1.1)';
+                
+                setTimeout(() => {
+                    showApp();
+                    passcodeOverlay.classList.add('hidden');
+                    // Reset styling for next time
+                    passcodeOverlay.style.opacity = '';
+                    passcodeOverlay.style.transform = '';
+                }, 600);
+            } else {
+                throw new Error(result.message || 'Invalid passcode');
+            }
+        } catch (error) {
             loginFeedback.textContent = 'Invalid access code. Please try again.';
             loginFeedback.className = 'feedback error';
             passcodeInput.value = '';
@@ -63,6 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.animation = 'none';
             void card.offsetWidth; // trigger reflow
             card.style.animation = 'shake 0.4s ease';
+        } finally {
+            unlockButton.disabled = false;
+            unlockButton.querySelector('span').textContent = 'Unlock';
         }
     }
 

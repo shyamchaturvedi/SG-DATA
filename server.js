@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import XLSX from 'xlsx';
 import cors from 'cors';
@@ -39,6 +40,18 @@ function loadData() {
 
 // Initial data load
 loadData();
+
+// API endpoint to verify passcode
+app.post('/verify-passcode', (req, res) => {
+    const { passcode } = req.body;
+    const masterPasscode = process.env.PASSCODE || '12345';
+    
+    if (passcode === masterPasscode) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, message: 'Invalid Passcode' });
+    }
+});
 
 // API endpoint to search data
 app.get('/search', (req, res) => {
