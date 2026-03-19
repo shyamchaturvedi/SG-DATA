@@ -98,8 +98,14 @@ app.get('/search', (req, res) => {
     }
 });
 
+// Route to handle /ID=... links
+app.get('/ID=:id', (req, res) => {
+    res.redirect(`/?ID=${req.params.id}`);
+});
+
 // Route to serve the main HTML file
 app.get('/', (req, res) => {
+    // Note: Frontend will handle the ID query parameter
     res.sendFile(path.join(__dirname, 'PUBLIC', 'index.html'));
 });
 

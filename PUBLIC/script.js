@@ -65,6 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Reset styling for next time
                     passcodeOverlay.style.opacity = '';
                     passcodeOverlay.style.transform = '';
+
+                    // AUTO SEARCH after unlock if input has value (from URL)
+                    if (searchInput.value) {
+                        performSearch();
+                    }
                 }, 600);
             } else {
                 throw new Error(result.message || 'Invalid passcode');
@@ -251,18 +256,19 @@ document.addEventListener('DOMContentLoaded', () => {
         window.print();
     });
 
-    // Check auth on load
+    // Check auth and quick-links on load
     checkAuth();
-
-    // Add CSS for shake animation dynamically if not in CSS
-    const styleSheet = document.createElement("style");
-    styleSheet.innerText = `
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            50% { transform: translateX(8px); }
-            75% { transform: translateX(-8px); }
+    
+    // Auto-search if ID is in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoId = urlParams.get('ID') || urlParams.get('q');
+    
+    if (autoId) {
+        searchInput.value = autoId;
+        // If already unlocked, search immediately. 
+        // If not, it will be searched once handleLogin succeeds since we keep the input value.
+        if (sessionStorage.getItem('isUnlocked') === 'true') {
+            performSearch();
         }
-    `;
-    document.head.appendChild(styleSheet);
+    }
 });
