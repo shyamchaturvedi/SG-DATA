@@ -466,6 +466,27 @@ tbody tr:hover {
     }
 }
 
+.app-footer-web {
+    margin-top: 60px;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.app-footer-web a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.app-footer-web a:hover {
+    text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+    color: white;
+}
+
 /* Small Screens & Tablets */
 @media (max-width: 1024px) {
     .container {
