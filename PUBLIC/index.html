@@ -1,168 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Customer Data Search</title>
-
-<style>
-
-body{
-font-family:Arial, sans-serif;
-margin:0;
-padding:0;
-background:#f4f4f4;
-}
-
-.container{
-width:90%;
-max-width:1000px;
-margin:auto;
-margin-top:40px;
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
-
-.header{
-text-align:center;
-margin-bottom:20px;
-}
-
-.search-container{
-display:flex;
-gap:10px;
-margin-bottom:20px;
-}
-
-.search-container input{
-flex:1;
-padding:10px;
-font-size:16px;
-}
-
-.search-container button{
-padding:10px 15px;
-cursor:pointer;
-}
-
-.table-container{
-overflow-x:auto;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th, td{
-border:1px solid #ccc;
-padding:8px;
-text-align:left;
-}
-
-th{
-background:#eee;
-}
-
-/* SYSTEM LOCK SCREEN */
-
-#systemLock{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#000000e6;
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:9999;
-}
-
-.lock-box{
-background:white;
-padding:40px;
-border-radius:10px;
-text-align:center;
-width:90%;
-max-width:400px;
-}
-
-.lock-box h1{
-color:red;
-margin-bottom:10px;
-}
-
-.lock-box p{
-font-size:16px;
-margin-bottom:15px;
-}
-
-.lock-box button{
-padding:10px 20px;
-border:none;
-background:#007bff;
-color:white;
-border-radius:5px;
-cursor:pointer;
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SG Data Portal | Premium Business Intelligence</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <!-- Passcode Overlay -->
+    <div id="passcodeOverlay" class="overlay">
+        <div class="glass-card login-card">
+            <div class="icon-header">
+                <i data-lucide="lock" class="lock-icon"></i>
+            </div>
+            <h2>Secure Access</h2>
+            <p>Please enter your access code to proceed</p>
+            <div class="input-group">
+                <input type="password" id="passcodeInput" placeholder="•••••" maxlength="10">
+                <button id="unlockButton">
+                    <span>Unlock</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+            <div id="loginFeedback" class="feedback"></div>
+        </div>
+    </div>
 
-<!-- SYSTEM LOCK MESSAGE -->
+    <!-- Main Content -->
+    <div id="mainApp" class="container hidden">
+        <header class="app-header">
+            <div class="logo-area">
+                <i data-lucide="database" class="header-icon"></i>
+                <h1>SG DATA <span>PORTAL</span></h1>
+            </div>
+            <div class="header-actions">
+                <button id="logoutButton" class="btn-ghost">
+                    <i data-lucide="log-out"></i>
+                    <span>Lock</span>
+                </button>
+            </div>
+        </header>
 
-<div id="systemLock">
-<div class="lock-box">
+        <section class="search-section">
+            <div class="glass-card search-card">
+                <div class="search-input-wrapper">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search by Customer Name, ID, or Associate ID...">
+                    <button id="searchButton" class="btn-primary">Search</button>
+                    <button id="printButton" class="btn-secondary hidden" title="Print Results">
+                        <i data-lucide="printer"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
 
-<h1>⚠ System Update Required</h1>
+        <section class="results-section">
+            <div id="customerHeader" class="customer-info hidden">
+                <h2 id="customerDisplayName">STEFANIE CHASE</h2>
+            </div>
+            
+            <div class="table-wrapper glass-card">
+                <table id="resultTable">
+                    <thead id="tableHead">
+                        <!-- Dynamic Header -->
+                    </thead>
+                    <tbody>
+                        <!-- Dynamic Content -->
+                    </tbody>
+                </table>
+                <div id="noResults" class="no-records hidden">
+                    <i data-lucide="info"></i>
+                    <p>No records found. Please refine your search.</p>
+                </div>
+            </div>
+        </section>
+    </div>
 
-<p>Your system access has been temporarily disabled.</p>
+    <!-- Footer for Prints -->
+    <footer class="print-footer">
+        <p>© 2026 SG Data Portal - All Rights Reserved</p>
+    </footer>
 
-<p>Please contact administrator to renew your system.</p>
-
-<button onclick="contactAdmin()">Contact Admin</button>
-
-</div>
-</div>
-
-
-<div class="container">
-<div class="header">
-<h1>Customer Data Search</h1>
-</div>
-
-<div class="customer-header" id="customerName" style="display:none;">
-CUSTOMER NAME
-</div>
-
-<div class="search-container">
-<input type="text" id="searchInput" placeholder="Enter Customer Name, ID, or Associate ID...">
-<button id="searchButton">Search</button>
-<button id="printButton" style="display:none;">Print Results</button>
-</div>
-
-<div class="table-container">
-<table id="resultTable">
-<thead id="tableHead"></thead>
-<tbody></tbody>
-</table>
-</div>
-</div>
-
-
-<script>
-
-function contactAdmin(){
-alert("Please contact admin to renew your system access.");
-}
-
-</script>
-
+    <script src="script.js"></script>
 </body>
+
 </html>
