@@ -429,40 +429,91 @@ tbody tr:hover {
 
 /* Print Overrides */
 @media print {
-    body {
-        background: white;
-        color: black;
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
     }
-    .overlay, .search-section, .app-header, .print-footer {
+
+    body {
+        background: white !important;
+        color: black !important;
+        background-image: none !important;
+    }
+
+    .overlay, .search-section, .app-header, .app-footer-web, .btn-ghost {
         display: none !important;
     }
+
     .container {
         padding: 0;
         margin: 0;
         max-width: none;
+        width: 100%;
     }
+
     .glass-card {
-        background: transparent;
-        box-shadow: none;
-        border: none;
-        backdrop-filter: none;
+        background: white !important;
+        box-shadow: none !important;
+        border: none !important;
+        backdrop-filter: none !important;
+        width: 100%;
     }
+
+    .table-wrapper {
+        overflow: visible !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
     table {
+        min-width: 100% !important;
+        width: 100% !important;
         border: 1px solid #000;
-        font-size: 9pt;
+        font-size: 8pt !important; /* Smaller text for print to fit all cols */
     }
+
     th, td {
-        border: 1px solid #000;
+        border: 1px solid #000 !important;
         color: black !important;
-        padding: 6px 8px;
+        padding: 5px 3px !important; /* Tighter padding for print */
+        overflow: hidden;
+        word-wrap: break-word;
     }
+
     .table-customer-header th {
-        background: #f0f0f0 !important;
+        background: #f0f4f8 !important;
+        font-size: 14pt !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
-    .balance-box-row td {
-        background: #e0f2fe !important;
+
+    .totals-row td {
+        background: #f8f9fa !important;
+        font-weight: bold;
+        -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+    }
+
+    .balance-box-row td {
+        background: #e6fffa !important;
+        border: 2px solid #000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .balance-text {
+        font-size: 12pt !important;
+        color: #000 !important;
+    }
+
+    .print-footer {
+        display: block !important;
+        text-align: center;
+        margin-top: 20px;
+        font-size: 9pt;
+        border-top: 1px solid #ccc;
+        padding-top: 10px;
     }
 }
 
