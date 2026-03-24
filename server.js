@@ -4,7 +4,13 @@ import XLSX from 'xlsx';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import { createClient } from '@supabase/supabase-js';
 import { fileURLToPath } from 'url';
+
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_KEY
+);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,54 +49,88 @@ function loadData() {
 loadData();
 
 // API endpoint to verify passcode
-app.post('/verify-passcode', (req, res) => {
-    const { passcode } = req.body;
-    const masterPasscode = (process.env.PASSCODE || '12345').trim();
-    
-    if (passcode.trim() === masterPasscode) {
-        res.json({ success: true });
-    } else {
-        res.status(401).json({ success: false, message: 'Invalid Passcode' });
+app.post('/verify-passcode', async (req, res) => {
+    try {
+        const { passcode } = req.body;
+        
+        // Try getting from Supabase first
+        const { data, error } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'PASSCODE')
+            .single();
+
+        let masterPasscode;
+        if (data && !error) {
+            masterPasscode = data.value;
+        } else {
+            // Fallback to .env if not found in Supabase
+            masterPasscode = process.env.PASSCODE || '12345';
+        }
+
+        if (passcode.trim() === masterPasscode.trim()) {
+            res.json({ success: true });
+        } else {
+            res.status(401).json({ success: false, message: 'Invalid Passcode' });
+        }
+    } catch (err) {
+        console.error('Verify error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
 // API endpoint to update passcode
-app.post('/update-passcode', (req, res) => {
+app.post('/update-passcode', async (req, res) => {
     const { currentPasscode, newPasscode } = req.body;
-    const masterPasscode = process.env.PASSCODE || '12345';
-
-    if (currentPasscode !== masterPasscode) {
-        return res.status(401).json({ success: false, message: 'Current passcode is incorrect' });
-    }
-
-    if (!newPasscode || newPasscode.length < 4) {
-        return res.status(400).json({ success: false, message: 'New passcode must be at least 4 characters long' });
-    }
 
     try {
-        const envPath = path.join(__dirname, '.env');
-        let envContent = '';
-        
-        if (fs.existsSync(envPath)) {
-            envContent = fs.readFileSync(envPath, 'utf8');
+        // Get current passcode from Supabase (fallback to .env)
+        const { data: currentData } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'PASSCODE')
+            .single();
+
+        const masterPasscode = (currentData ? currentData.value : (process.env.PASSCODE || '12345')).trim();
+
+        if (currentPasscode.trim() !== masterPasscode) {
+            return res.status(401).json({ success: false, message: 'Current passcode is incorrect' });
         }
 
-        // Update or add PASSCODE in .env content
-        const newPasscodeLine = `PASSCODE=${newPasscode}`;
-        if (envContent.includes('PASSCODE=')) {
-            envContent = envContent.replace(/PASSCODE=.*/, newPasscodeLine);
-        } else {
-            envContent += `\n${newPasscodeLine}`;
+        if (!newPasscode || newPasscode.length < 4) {
+            return res.status(400).json({ success: false, message: 'New passcode must be at least 4 characters long' });
         }
 
-        fs.writeFileSync(envPath, envContent);
-        process.env.PASSCODE = newPasscode; // Update in-memory for immediate effect
-        
-        console.log('Passcode updated successfully.');
+        // Update Supabase
+        const { error: updateError } = await supabase
+            .from('app_settings')
+            .upsert({ key: 'PASSCODE', value: newPasscode });
+
+        if (updateError) throw updateError;
+
+        // Also update local .env as backup (only works locally)
+        try {
+            const envPath = path.join(__dirname, '.env');
+            if (fs.existsSync(envPath)) {
+                let envContent = fs.readFileSync(envPath, 'utf8');
+                const newPasscodeLine = `PASSCODE=${newPasscode}`;
+                if (envContent.includes('PASSCODE=')) {
+                    envContent = envContent.replace(/PASSCODE=.*/, newPasscodeLine);
+                } else {
+                    envContent += `\n${newPasscodeLine}`;
+                }
+                fs.writeFileSync(envPath, envContent);
+            }
+        } catch (e) {
+            console.log('Local .env update failed (expected on Vercel)');
+        }
+
+        process.env.PASSCODE = newPasscode;
         res.json({ success: true, message: 'Passcode updated successfully' });
+
     } catch (error) {
         console.error('Error updating passcode:', error);
-        res.status(500).json({ success: false, message: 'Internal server error while updating passcode' });
+        res.status(500).json({ success: false, message: 'Failed to update passcode in database' });
     }
 });
 
