@@ -165,6 +165,44 @@ body {
     color: var(--error);
 }
 
+.feedback.success {
+    color: var(--secondary);
+}
+
+.input-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.input-group-vertical input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 20px;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.input-group-vertical input:focus {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.modal-actions button {
+    flex: 1;
+}
+
 /* Main App Layout */
 .container {
     max-width: 1400px;

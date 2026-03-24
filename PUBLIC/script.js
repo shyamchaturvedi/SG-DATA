@@ -15,6 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const tableBody = resultTable.querySelector('tbody');
     const noResults = document.getElementById('noResults');
 
+    // Settings Elements
+    const settingsButton = document.getElementById('settingsButton');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsButton = document.getElementById('closeSettingsButton');
+    const savePasscodeButton = document.getElementById('savePasscodeButton');
+    const currentPasscodeInput = document.getElementById('currentPasscodeInput');
+    const newPasscodeInput = document.getElementById('newPasscodeInput');
+    const settingsFeedback = document.getElementById('settingsFeedback');
+
     // Config - REMOVED hardcoded passcode for security
     // The passcode is now stored securely on the server in a .env file.
 
@@ -254,6 +263,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
     printButton.addEventListener('click', () => {
         window.print();
+    });
+
+    // --- Settings / Passcode Change ---
+    
+    settingsButton.addEventListener('click', () => {
+        settingsModal.classList.remove('hidden');
+        settingsFeedback.textContent = '';
+        settingsFeedback.className = 'feedback';
+        currentPasscodeInput.value = '';
+        newPasscodeInput.value = '';
+        currentPasscodeInput.focus();
+    });
+
+    closeSettingsButton.addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+    });
+
+    savePasscodeButton.addEventListener('click', async () => {
+        const currentCode = currentPasscodeInput.value.trim();
+        const newCode = newPasscodeInput.value.trim();
+
+        if (!currentCode || !newCode) {
+            settingsFeedback.textContent = 'Please fill all fields.';
+            settingsFeedback.className = 'feedback error';
+            return;
+        }
+
+        if (newCode.length < 4) {
+            settingsFeedback.textContent = 'New code must be at least 4 characters.';
+            settingsFeedback.className = 'feedback error';
+            return;
+        }
+
+        savePasscodeButton.disabled = true;
+        savePasscodeButton.textContent = 'Updating...';
+
+        try {
+            const response = await fetch('/update-passcode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPasscode: currentCode, newPasscode: newCode })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                settingsFeedback.textContent = 'Success! Redirecting...';
+                settingsFeedback.className = 'feedback success';
+                
+                setTimeout(() => {
+                    handleLogout(); // Force relogin with new code
+                }, 1500);
+            } else {
+                throw new Error(result.message || 'Update failed');
+            }
+        } catch (error) {
+            settingsFeedback.textContent = error.message;
+            settingsFeedback.className = 'feedback error';
+            savePasscodeButton.disabled = false;
+            savePasscodeButton.textContent = 'Update';
+        }
     });
 
     // Check auth and quick-links on load
