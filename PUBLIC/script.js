@@ -62,6 +62,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginFeedback.textContent = 'Access Granted!';
                 loginFeedback.className = 'feedback success';
                 sessionStorage.setItem('isUnlocked', 'true');
+                sessionStorage.setItem('sessionPasscode', code); // Store for API calls
+                
+                if (result.isAdmin) {
+                    sessionStorage.setItem('isAdmin', 'true');
+                    settingsButton.classList.remove('hidden');
+                } else {
+                    sessionStorage.setItem('isAdmin', 'false');
+                    settingsButton.classList.add('hidden');
+                }
                 
                 // Success animation
                 passcodeOverlay.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -108,6 +117,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function showApp() {
         passcodeOverlay.classList.add('hidden');
         mainApp.classList.remove('hidden');
+        
+        // Ensure settings button is correct on refresh
+        if (sessionStorage.getItem('isAdmin') === 'true') {
+            settingsButton.classList.remove('hidden');
+        } else {
+            settingsButton.classList.add('hidden');
+        }
+        
         searchInput.focus();
     }
 
@@ -128,7 +145,10 @@ document.addEventListener('DOMContentLoaded', () => {
         searchButton.innerHTML = 'Searching...';
 
         try {
-            const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+            const sessionPasscode = sessionStorage.getItem('sessionPasscode');
+            const response = await fetch(`/search?q=${encodeURIComponent(query)}`, {
+                headers: { 'x-passcode': sessionPasscode }
+            });
             const data = await response.json();
 
             renderResults(data);

@@ -48,96 +48,92 @@ function loadData() {
 // Initial data load
 loadData();
 
+// Helper function to get passcodes (cache locally is tough in serverless, so we fetch each time or use env)
+async function getConfigs() {
+    try {
+        const { data, error } = await supabase
+            .from('app_settings')
+            .select('key, value');
+
+        const configs = {
+            PASSCODE: process.env.PASSCODE || 'SG@ALLDATA',
+            ADMIN_PASSCODE: process.env.ADMIN_PASSCODE || 'ADMIN@SG'
+        };
+
+        if (data && !error) {
+            data.forEach(item => {
+                if (item.key === 'PASSCODE') configs.PASSCODE = item.value;
+                if (item.key === 'ADMIN_PASSCODE') configs.ADMIN_PASSCODE = item.value;
+            });
+        }
+        return configs;
+    } catch (e) {
+        return { PASSCODE: process.env.PASSCODE, ADMIN_PASSCODE: process.env.ADMIN_PASSCODE };
+    }
+}
+
 // API endpoint to verify passcode
 app.post('/verify-passcode', async (req, res) => {
     try {
         const { passcode } = req.body;
+        const configs = await getConfigs();
         
-        // Try getting from Supabase first
-        const { data, error } = await supabase
-            .from('app_settings')
-            .select('value')
-            .eq('key', 'PASSCODE')
-            .single();
-
-        let masterPasscode;
-        if (data && !error) {
-            masterPasscode = data.value;
-        } else {
-            // Fallback to .env if not found in Supabase
-            masterPasscode = process.env.PASSCODE || '12345';
-        }
-
-        if (passcode.trim() === masterPasscode.trim()) {
-            res.json({ success: true });
+        if (passcode.trim() === configs.PASSCODE.trim() || passcode.trim() === configs.ADMIN_PASSCODE.trim()) {
+            // Return which role they have (though not used on frontend yet)
+            res.json({ success: true, isAdmin: passcode.trim() === configs.ADMIN_PASSCODE.trim() });
         } else {
             res.status(401).json({ success: false, message: 'Invalid Passcode' });
         }
     } catch (err) {
-        console.error('Verify error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
 // API endpoint to update passcode
 app.post('/update-passcode', async (req, res) => {
-    const { currentPasscode, newPasscode } = req.body;
+    const { currentPasscode, newPasscode, type } = req.body; // type: 'USER' or 'ADMIN'
 
     try {
-        // Get current passcode from Supabase (fallback to .env)
-        const { data: currentData } = await supabase
-            .from('app_settings')
-            .select('value')
-            .eq('key', 'PASSCODE')
-            .single();
-
-        const masterPasscode = (currentData ? currentData.value : (process.env.PASSCODE || '12345')).trim();
-
-        if (currentPasscode.trim() !== masterPasscode) {
-            return res.status(401).json({ success: false, message: 'Current passcode is incorrect' });
+        const configs = await getConfigs();
+        
+        // Only ADMIN_PASSCODE can update any passcode
+        if (currentPasscode.trim() !== configs.ADMIN_PASSCODE.trim()) {
+            return res.status(401).json({ success: false, message: 'Access Denied: Admin authorization required' });
         }
 
         if (!newPasscode || newPasscode.length < 4) {
             return res.status(400).json({ success: false, message: 'New passcode must be at least 4 characters long' });
         }
 
+        const targetKey = type === 'ADMIN' ? 'ADMIN_PASSCODE' : 'PASSCODE';
+
         // Update Supabase
         const { error: updateError } = await supabase
             .from('app_settings')
-            .upsert({ key: 'PASSCODE', value: newPasscode });
+            .upsert({ key: targetKey, value: newPasscode });
 
         if (updateError) throw updateError;
 
-        // Also update local .env as backup (only works locally)
-        try {
-            const envPath = path.join(__dirname, '.env');
-            if (fs.existsSync(envPath)) {
-                let envContent = fs.readFileSync(envPath, 'utf8');
-                const newPasscodeLine = `PASSCODE=${newPasscode}`;
-                if (envContent.includes('PASSCODE=')) {
-                    envContent = envContent.replace(/PASSCODE=.*/, newPasscodeLine);
-                } else {
-                    envContent += `\n${newPasscodeLine}`;
-                }
-                fs.writeFileSync(envPath, envContent);
-            }
-        } catch (e) {
-            console.log('Local .env update failed (expected on Vercel)');
-        }
-
-        process.env.PASSCODE = newPasscode;
-        res.json({ success: true, message: 'Passcode updated successfully' });
+        res.json({ success: true, message: `${type} passcode updated successfully` });
 
     } catch (error) {
         console.error('Error updating passcode:', error);
-        res.status(500).json({ success: false, message: 'Failed to update passcode in database' });
+        res.status(500).json({ success: false, message: 'Failed to update passcode' });
     }
 });
 
-// API endpoint to search data
-app.get('/search', (req, res) => {
+// API endpoint to search data - PROTECTED
+app.get('/search', async (req, res) => {
     if (!cachedData) {
-        return res.status(500).json({ error: 'Excel data not loaded. Please check the server logs.' });
+        return res.status(500).json({ error: 'Excel data not loaded' });
+    }
+
+    // Security Check: Token/Passcode must be provided in header
+    const providedPasscode = req.headers['x-passcode'];
+    const configs = await getConfigs();
+
+    if (!providedPasscode || (providedPasscode.trim() !== configs.PASSCODE.trim() && providedPasscode.trim() !== configs.ADMIN_PASSCODE.trim())) {
+        return res.status(403).json({ error: 'Unauthorized access: Valid passcode required' });
     }
 
     try {
