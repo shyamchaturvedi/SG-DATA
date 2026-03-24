@@ -27,11 +27,12 @@
             </div>
             <h2>Secure Access</h2>
             <p>Please enter your access code to proceed</p>
-            <div class="input-group">
-                <input type="password" id="passcodeInput" placeholder="•••••" maxlength="30">
-                <button id="unlockButton">
-                    <span>Unlock</span>
-                    <i data-lucide="arrow-right"></i>
+            <div class="input-group-vertical">
+                <input type="email" id="emailInput" placeholder="Your Admin Email" required>
+                <input type="password" id="passwordInput" placeholder="••••••••" required>
+                <button id="loginButton" class="btn-primary">
+                    <span>Login</span>
+                    <i data-lucide="log-in"></i>
                 </button>
             </div>
             <div id="loginFeedback" class="feedback"></div>
@@ -46,60 +47,57 @@
                 <h1>SG DATA <span>PORTAL</span></h1>
             </div>
             <div class="header-actions">
-                <button id="settingsButton" class="btn-ghost" title="Settings">
+                <button id="settingsButton" class="btn-ghost hidden" title="Settings">
                     <i data-lucide="settings"></i>
                 </button>
-                <button id="logoutButton" class="btn-ghost" title="Lock">
+                <button id="logoutButton" class="btn-ghost" title="Logout">
                     <i data-lucide="log-out"></i>
-                    <span>Lock</span>
                 </button>
             </div>
         </header>
 
-        <section class="search-section">
-            <div class="glass-card search-card">
-                <div class="search-input-wrapper">
-                    <i data-lucide="search" class="search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="Search by Customer Name, ID, or Associate ID...">
-                    <button id="searchButton" class="btn-primary">Search</button>
+        <main class="app-content">
+            <section class="search-section">
+                <div class="glass-card search-card">
+                    <div class="search-title">
+                        <h2>Client Database <span>Search</span></h2>
+                        <p>Search over thousands of records instantly</p>
+                    </div>
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" id="searchInput" placeholder="Enter customer name or ID...">
+                        <button id="searchButton" class="btn-primary">Search</button>
+                    </div>
                     <button id="printButton" class="btn-secondary hidden" title="Print Results">
                         <i data-lucide="printer"></i>
+                        <span>Print Sheet</span>
                     </button>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="results-section">
-            <div id="customerHeader" class="customer-info hidden">
-                <h2 id="customerDisplayName">STEFANIE CHASE</h2>
-            </div>
-
-            <div class="table-wrapper glass-card">
-                <table id="resultTable">
-                    <thead id="tableHead">
-                        <!-- Dynamic Header -->
-                    </thead>
-                    <tbody>
-                        <!-- Dynamic Content -->
-                    </tbody>
-                </table>
-                <div id="noResults" class="no-records hidden">
-                    <i data-lucide="info"></i>
-                    <p>No records found. Please refine your search.</p>
+            <section class="results-section">
+                <div id="customerHeader" class="customer-info hidden">
+                    <h2 id="customerDisplayName">STEFANIE CHASE</h2>
                 </div>
-            </div>
-        </section>
 
-        <!-- App Footer -->
-        <footer class="app-footer-web">
-            <p>Developed by <a href="https://www.aroventech.site" target="_blank">Aroven Tech</a></p>
-        </footer>
+                <div class="table-wrapper glass-card">
+                    <table id="resultTable">
+                        <thead id="tableHead"></thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="noResults" class="no-records hidden">
+                        <i data-lucide="info"></i>
+                        <p>No records found. Please refine your search.</p>
+                    </div>
+                <div class="print-only-footer">
+                    <p>--- END OF REPORT ---</p>
+                </div>
+            </section>
+        </main>
+
     </div>
 
-    <!-- Footer for Prints -->
-    <footer class="print-footer">
-        <p>© 2026 SG Data Portal | Developed by Aroven Tech (www.aroventech.site)</p>
-    </footer>
+
 
     <!-- Passcode Update Modal -->
     <div id="settingsModal" class="overlay hidden">

@@ -15,6 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const tableBody = resultTable.querySelector('tbody');
     const noResults = document.getElementById('noResults');
 
+    // Login Elements
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginButton = document.getElementById('loginButton');
+
     // Settings Elements
     const settingsButton = document.getElementById('settingsButton');
     const settingsModal = document.getElementById('settingsModal');
@@ -43,63 +48,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleLogin() {
-        const code = passcodeInput.value.trim();
-        if (!code) return;
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+        
+        if (!email || !password) return;
 
-        // Visual feedback
-        unlockButton.disabled = true;
-        unlockButton.querySelector('span').textContent = 'Verifying...';
+        loginButton.disabled = true;
+        loginButton.querySelector('span').textContent = 'Authenticating...';
 
         try {
-            const response = await fetch('/verify-passcode', {
+            const response = await fetch('/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ passcode: code })
+                body: JSON.stringify({ email, password })
             });
             const result = await response.json();
 
             if (result.success) {
-                loginFeedback.textContent = 'Access Granted!';
+                loginFeedback.textContent = 'Login Successful!';
                 loginFeedback.className = 'feedback success';
                 sessionStorage.setItem('isUnlocked', 'true');
-                sessionStorage.setItem('sessionPasscode', code); 
-                sessionStorage.setItem('isAdmin', 'true'); // Everyone who logs in is admin
-                settingsButton.classList.remove('hidden');
-                
-                // Success animation
-                passcodeOverlay.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                passcodeOverlay.style.opacity = '0';
-                passcodeOverlay.style.transform = 'scale(1.1)';
+                sessionStorage.setItem('authToken', result.token);
+                sessionStorage.setItem('isAdmin', 'true'); // Auth users are admins
                 
                 setTimeout(() => {
                     showApp();
                     passcodeOverlay.classList.add('hidden');
-                    // Reset styling for next time
-                    passcodeOverlay.style.opacity = '';
-                    passcodeOverlay.style.transform = '';
-
-                    // AUTO SEARCH after unlock if input has value (from URL)
-                    if (searchInput.value) {
-                        performSearch();
-                    }
                 }, 600);
             } else {
-                throw new Error(result.message || 'Invalid passcode');
+                throw new Error(result.message || 'Login failed');
             }
         } catch (error) {
-            loginFeedback.textContent = 'Invalid access code. Please try again.';
+            loginFeedback.textContent = error.message;
             loginFeedback.className = 'feedback error';
-            passcodeInput.value = '';
-            passcodeInput.focus();
-            
-            // Shake effect
-            const card = document.querySelector('.login-card');
-            card.style.animation = 'none';
-            void card.offsetWidth; // trigger reflow
-            card.style.animation = 'shake 0.4s ease';
         } finally {
-            unlockButton.disabled = false;
-            unlockButton.querySelector('span').textContent = 'Unlock';
+            loginButton.disabled = false;
+            loginButton.querySelector('span').textContent = 'Login';
         }
     }
 
@@ -134,30 +118,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const query = searchInput.value.trim();
         if (!query) return;
 
-        // Visual feedback
         searchButton.disabled = true;
-        searchButton.innerHTML = 'Searching...';
+        searchButton.textContent = 'Searching...';
+        
+        noResults.classList.add('hidden'); // Hide it when beginning search
+        tableBody.innerHTML = '';
+        tableHead.innerHTML = '';
 
         try {
-            const sessionPasscode = sessionStorage.getItem('sessionPasscode');
+            const token = sessionStorage.getItem('authToken');
             const response = await fetch(`/search?q=${encodeURIComponent(query)}`, {
-                headers: { 'x-passcode': sessionPasscode }
+                headers: { 'x-auth-token': token }
             });
             const data = await response.json();
-
             renderResults(data);
         } catch (error) {
-            console.error('Search error:', error);
-            showNoResults('Network error. Please check if the server is running.');
+            showNoResults('Session expired. Please login again.');
         } finally {
             searchButton.disabled = false;
-            searchButton.innerHTML = 'Search';
+            searchButton.textContent = 'Search';
         }
     }
 
     function renderResults(data) {
         tableBody.innerHTML = '';
         tableHead.innerHTML = '';
+        noResults.classList.add('hidden'); // Success! Hide the error message
         
         if (!data || data.length === 0 || data.error) {
             showNoResults();
@@ -263,23 +249,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Events ---
 
-    unlockButton.addEventListener('click', handleLogin);
-    passcodeInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleLogin();
-    });
+    if (loginButton) loginButton.addEventListener('click', handleLogin);
+    if (passwordInput) {
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+    }
 
-    logoutButton.addEventListener('click', handleLogout);
+    if (searchButton) searchButton.addEventListener('click', performSearch);
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+    }
 
-    searchButton.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
-    });
+    if (printButton) {
+        printButton.addEventListener('click', () => {
+            window.print();
+        });
+    }
 
-    printButton.addEventListener('click', () => {
-        window.print();
-    });
-
-    // --- Settings / Passcode Change ---
+    if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+    }
     
     settingsButton.addEventListener('click', () => {
         settingsModal.classList.remove('hidden');
@@ -295,46 +287,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     savePasscodeButton.addEventListener('click', async () => {
-        const currentCode = currentPasscodeInput.value.trim();
+        const currentCode = currentPasscodeInput.value.trim(); // Not needed for auth but kept in UI
         const newCode = newPasscodeInput.value.trim();
+        const token = sessionStorage.getItem('authToken');
 
-        if (!currentCode || !newCode) {
-            settingsFeedback.textContent = 'Please fill all fields.';
-            settingsFeedback.className = 'feedback error';
-            return;
-        }
-
-        if (newCode.length < 4) {
-            settingsFeedback.textContent = 'New code must be at least 4 characters.';
-            settingsFeedback.className = 'feedback error';
-            return;
-        }
+        if (!newCode) return;
 
         savePasscodeButton.disabled = true;
         savePasscodeButton.textContent = 'Updating...';
 
         try {
-            const response = await fetch('/update-passcode', {
+            const response = await fetch('/update-setting', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ currentPasscode: currentCode, newPasscode: newCode })
+                body: JSON.stringify({ token, key: 'ADMIN_PASSCODE', value: newCode })
             });
 
             const result = await response.json();
 
             if (result.success) {
-                settingsFeedback.textContent = 'Success! Redirecting...';
+                settingsFeedback.textContent = 'Success! System updated.';
                 settingsFeedback.className = 'feedback success';
-                
-                setTimeout(() => {
-                    handleLogout(); // Force relogin with new code
-                }, 1500);
+                setTimeout(() => settingsModal.classList.add('hidden'), 1500);
             } else {
                 throw new Error(result.message || 'Update failed');
             }
         } catch (error) {
             settingsFeedback.textContent = error.message;
             settingsFeedback.className = 'feedback error';
+        } finally {
             savePasscodeButton.disabled = false;
             savePasscodeButton.textContent = 'Update';
         }

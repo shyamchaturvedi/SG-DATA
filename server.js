@@ -48,81 +48,72 @@ function loadData() {
 // Initial data load
 loadData();
 
-// Helper function to get admin passcode from Supabase (default ADMIN@SG)
-async function getAdminPasscode() {
+// API endpoint to login with Email and Password (Supabase Auth)
+app.post('/login', async (req, res) => {
     try {
-        const { data, error } = await supabase
-            .from('app_settings')
-            .select('value')
-            .eq('key', 'ADMIN_PASSCODE')
-            .single();
-
-        if (data && !error) return data.value.trim();
-        return (process.env.ADMIN_PASSCODE || 'ADMIN@SG').trim();
-    } catch (e) {
-        return (process.env.ADMIN_PASSCODE || 'ADMIN@SG').trim();
-    }
-}
-
-// API endpoint to verify passcode
-app.post('/verify-passcode', async (req, res) => {
-    try {
-        const { passcode } = req.body;
-        const masterPasscode = await getAdminPasscode();
+        const { email, password } = req.body;
         
-        if (passcode.trim() === masterPasscode) {
-            res.json({ success: true, isAdmin: true });
-        } else {
-            res.status(401).json({ success: false, message: 'Invalid Admin Passcode' });
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) {
+            return res.status(401).json({ success: false, message: error.message });
         }
+
+        // Return the session token to the client
+        res.json({ 
+            success: true, 
+            token: data.session.access_token,
+            user: data.user.email
+        });
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Server error' });
+        console.error('Login error:', err);
+        res.status(500).json({ success: false, message: 'Server error during login' });
     }
 });
 
-// API endpoint to update passcode
-app.post('/update-passcode', async (req, res) => {
-    const { currentPasscode, newPasscode } = req.body;
+// API endpoint to update passcode (Now an administrative setting in DB)
+app.post('/update-setting', async (req, res) => {
+    const { token, key, value } = req.body;
 
     try {
-        const masterPasscode = await getAdminPasscode();
-        
-        // Only valid admin passcode can update
-        if (currentPasscode.trim() !== masterPasscode) {
-            return res.status(401).json({ success: false, message: 'Current passcode is incorrect' });
+        // Authenticate with the provided token
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) {
+            return res.status(401).json({ success: false, message: 'Unauthorized session' });
         }
 
-        if (!newPasscode || newPasscode.length < 4) {
-            return res.status(400).json({ success: false, message: 'New passcode must be at least 4 characters long' });
-        }
-
-        // Update Supabase
         const { error: updateError } = await supabase
             .from('app_settings')
-            .upsert({ key: 'ADMIN_PASSCODE', value: newPasscode });
+            .upsert({ key, value });
 
         if (updateError) throw updateError;
 
-        res.json({ success: true, message: 'Admin passcode updated successfully' });
-
+        res.json({ success: true, message: 'Setting updated successfully' });
     } catch (error) {
-        console.error('Error updating passcode:', error);
-        res.status(500).json({ success: false, message: 'Failed to update passcode' });
+        res.status(500).json({ success: false, message: 'Failed to update setting' });
     }
 });
 
-// API endpoint to search data - PROTECTED (Admin Only)
+// API endpoint to search data - PROTECTED (Token Required)
 app.get('/search', async (req, res) => {
     if (!cachedData) {
         return res.status(500).json({ error: 'Excel data not loaded' });
     }
 
-    // Security Check: Token/Passcode must match ADMIN_PASSCODE
-    const providedPasscode = req.headers['x-passcode'];
-    const masterPasscode = await getAdminPasscode();
+    // Security Check: Token must be valid in Supabase
+    const authToken = req.headers['x-auth-token'];
+    
+    if (!authToken) {
+        return res.status(401).json({ error: 'Missing auth token' });
+    }
 
-    if (!providedPasscode || providedPasscode.trim() !== masterPasscode) {
-        return res.status(403).json({ error: 'Unauthorized access: Admin passcode required' });
+    const { data: { user }, error } = await supabase.auth.getUser(authToken);
+
+    if (error || !user) {
+        return res.status(403).json({ error: 'Invalid or expired session' });
     }
 
     try {
