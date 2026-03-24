@@ -24,23 +24,28 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'PUBLIC')));
 
-const excelFilePath = path.join(__dirname, 'PUBLIC', 'MAIN BUSINESS UPDATE SHEET.xlsx');
+// Set the Excel file path more robustly for Vercel
+const excelFilePath = path.join(process.cwd(), 'PUBLIC', 'MAIN BUSINESS UPDATE SHEET.xlsx');
 
 let cachedData = null;
 
 function loadData() {
     try {
+        if (!fs.existsSync(excelFilePath)) {
+            console.error('Excel file not found at:', excelFilePath);
+            return;
+        }
         const workbook = XLSX.readFile(excelFilePath);
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         cachedData = XLSX.utils.sheet_to_json(worksheet, {
             defval: "",
             raw: false,
-            cellDates: true // Dates ko JavaScript Date objects ki tarah parse karega
+            cellDates: true
         });
-        console.log('Excel data loaded and cached.');
+        console.log('Excel data loaded successfully.');
     } catch (error) {
-        console.error('Error loading Excel file:', error);
+        console.error('CRITICAL: Error loading Excel file:', error.message);
         cachedData = null;
     }
 }
