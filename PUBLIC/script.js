@@ -62,15 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginFeedback.textContent = 'Access Granted!';
                 loginFeedback.className = 'feedback success';
                 sessionStorage.setItem('isUnlocked', 'true');
-                sessionStorage.setItem('sessionPasscode', code); // Store for API calls
-                
-                if (result.isAdmin) {
-                    sessionStorage.setItem('isAdmin', 'true');
-                    settingsButton.classList.remove('hidden');
-                } else {
-                    sessionStorage.setItem('isAdmin', 'false');
-                    settingsButton.classList.add('hidden');
-                }
+                sessionStorage.setItem('sessionPasscode', code); 
+                sessionStorage.setItem('isAdmin', 'true'); // Everyone who logs in is admin
+                settingsButton.classList.remove('hidden');
                 
                 // Success animation
                 passcodeOverlay.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';

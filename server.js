@@ -48,27 +48,19 @@ function loadData() {
 // Initial data load
 loadData();
 
-// Helper function to get passcodes (cache locally is tough in serverless, so we fetch each time or use env)
-async function getConfigs() {
+// Helper function to get admin passcode from Supabase (default ADMIN@SG)
+async function getAdminPasscode() {
     try {
         const { data, error } = await supabase
             .from('app_settings')
-            .select('key, value');
+            .select('value')
+            .eq('key', 'ADMIN_PASSCODE')
+            .single();
 
-        const configs = {
-            PASSCODE: process.env.PASSCODE || 'SG@ALLDATA',
-            ADMIN_PASSCODE: process.env.ADMIN_PASSCODE || 'ADMIN@SG'
-        };
-
-        if (data && !error) {
-            data.forEach(item => {
-                if (item.key === 'PASSCODE') configs.PASSCODE = item.value;
-                if (item.key === 'ADMIN_PASSCODE') configs.ADMIN_PASSCODE = item.value;
-            });
-        }
-        return configs;
+        if (data && !error) return data.value.trim();
+        return (process.env.ADMIN_PASSCODE || 'ADMIN@SG').trim();
     } catch (e) {
-        return { PASSCODE: process.env.PASSCODE, ADMIN_PASSCODE: process.env.ADMIN_PASSCODE };
+        return (process.env.ADMIN_PASSCODE || 'ADMIN@SG').trim();
     }
 }
 
@@ -76,13 +68,12 @@ async function getConfigs() {
 app.post('/verify-passcode', async (req, res) => {
     try {
         const { passcode } = req.body;
-        const configs = await getConfigs();
+        const masterPasscode = await getAdminPasscode();
         
-        if (passcode.trim() === configs.PASSCODE.trim() || passcode.trim() === configs.ADMIN_PASSCODE.trim()) {
-            // Return which role they have (though not used on frontend yet)
-            res.json({ success: true, isAdmin: passcode.trim() === configs.ADMIN_PASSCODE.trim() });
+        if (passcode.trim() === masterPasscode) {
+            res.json({ success: true, isAdmin: true });
         } else {
-            res.status(401).json({ success: false, message: 'Invalid Passcode' });
+            res.status(401).json({ success: false, message: 'Invalid Admin Passcode' });
         }
     } catch (err) {
         res.status(500).json({ success: false, message: 'Server error' });
@@ -91,30 +82,28 @@ app.post('/verify-passcode', async (req, res) => {
 
 // API endpoint to update passcode
 app.post('/update-passcode', async (req, res) => {
-    const { currentPasscode, newPasscode, type } = req.body; // type: 'USER' or 'ADMIN'
+    const { currentPasscode, newPasscode } = req.body;
 
     try {
-        const configs = await getConfigs();
+        const masterPasscode = await getAdminPasscode();
         
-        // Only ADMIN_PASSCODE can update any passcode
-        if (currentPasscode.trim() !== configs.ADMIN_PASSCODE.trim()) {
-            return res.status(401).json({ success: false, message: 'Access Denied: Admin authorization required' });
+        // Only valid admin passcode can update
+        if (currentPasscode.trim() !== masterPasscode) {
+            return res.status(401).json({ success: false, message: 'Current passcode is incorrect' });
         }
 
         if (!newPasscode || newPasscode.length < 4) {
             return res.status(400).json({ success: false, message: 'New passcode must be at least 4 characters long' });
         }
 
-        const targetKey = type === 'ADMIN' ? 'ADMIN_PASSCODE' : 'PASSCODE';
-
         // Update Supabase
         const { error: updateError } = await supabase
             .from('app_settings')
-            .upsert({ key: targetKey, value: newPasscode });
+            .upsert({ key: 'ADMIN_PASSCODE', value: newPasscode });
 
         if (updateError) throw updateError;
 
-        res.json({ success: true, message: `${type} passcode updated successfully` });
+        res.json({ success: true, message: 'Admin passcode updated successfully' });
 
     } catch (error) {
         console.error('Error updating passcode:', error);
@@ -122,18 +111,18 @@ app.post('/update-passcode', async (req, res) => {
     }
 });
 
-// API endpoint to search data - PROTECTED
+// API endpoint to search data - PROTECTED (Admin Only)
 app.get('/search', async (req, res) => {
     if (!cachedData) {
         return res.status(500).json({ error: 'Excel data not loaded' });
     }
 
-    // Security Check: Token/Passcode must be provided in header
+    // Security Check: Token/Passcode must match ADMIN_PASSCODE
     const providedPasscode = req.headers['x-passcode'];
-    const configs = await getConfigs();
+    const masterPasscode = await getAdminPasscode();
 
-    if (!providedPasscode || (providedPasscode.trim() !== configs.PASSCODE.trim() && providedPasscode.trim() !== configs.ADMIN_PASSCODE.trim())) {
-        return res.status(403).json({ error: 'Unauthorized access: Valid passcode required' });
+    if (!providedPasscode || providedPasscode.trim() !== masterPasscode) {
+        return res.status(403).json({ error: 'Unauthorized access: Admin passcode required' });
     }
 
     try {
